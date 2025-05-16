@@ -1,35 +1,225 @@
-@import './base.css';
-
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
-}
-
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
-}
-
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-}
-
-@media (min-width: 1024px) {
-  body {
+main {
     display: flex;
-    place-items: center;
-  }
+    justify-content: center;
+}
 
-  #app {
+body, main{
+    margin: 0;
+    height: 100vh; /* Agora o body ocupa toda a altura da tela */
+    width: 100%;
+    background-color: #0d0c0c;
+}
+
+#section01 {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: 55%;
+    justify-content: center;
+    align-items: center;
+    background-color: #1f060c;
+
+}
+.texts1{
+
+    writing-mode: vertical-rl; 
+    text-orientation: upright;   
+    margin: 0;                           
+    color:#381125;
+    font-family: Inter;
+
+}
+#logodiv {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: center;
+    align-items: center;
+    height: 10%;
+    width: 80%;
+
+}
+
+img{
+    height: auto;
+    width: 10vh;
+    margin-right: 2vh;
+}
+
+#h3sec1 {
+    margin: 0;
+    font-size: 2.5vh;
+}
+
+#h1sec1 {
+    margin: 0;
+    font-size: 1.8rem;
+
+}
+
+.textdivs1{
+    color: white;
+    font-family: Inter;
+    font-variant:normal;
+}
+
+
+#section02{
+    display: flex;
+    height: 100%;
+    width: 50%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #0d0c0c;
+}
+
+
+#divsec2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    width: 50%;
+    padding-top: 7vh;
+}
+
+.label{
+    display: flex;
+    padding-top: 10%;
+    width: 81%;
+    color: white;
+    font-family: Inter;
+    font-size: 1.7vh;
+    
+}
+
+.login-form{
+    width: 100%;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+    justify-items: center;
+}
+
+.footerForm{
+    position: relative;
+    width: 100%;
+    display: grid;
+    justify-items: center;
+}
+
+button {
+    padding-top: 8vh;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2vh;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.error-msg {
+  color: rgb(190, 30, 30);
+  top: 10px;
+  font-size: 1.5vh;
+  text-align: center;
+  position: absolute;
+}
+
+.input {
+    display: flex;
+    justify-items: left;
+    width: 80%;
+    background: none;
+    border: none;
+    padding-bottom: 3.5%;
+    border-bottom: 1px solid rgb(255, 255, 255);
+    padding-top: 6%;
+    color: rgb(255, 255, 255);
+    font-size: 1.5vh;
+    outline: none;
+
+}
+
+.input::placeholder {
+  color: rgb(85, 85, 85);
+  text-align: center;
+}
+
+#register{
+    color: white;
+    margin-top: 10%;
+    font-family: Inter;
+}
+
+.link{
+  cursor: pointer;
+  font: bold !important;
+}
+
+a{
+    color:aliceblue;
+}
+
+@media screen and (max-width: 900px){
+
+    body{
+        height: 150vw;
+    }
+    #section01{
+        display: none;
+    }
+    #section02 {
+        display: flex;
+        flex-direction: column;
+        height:auto;
+        width: 100%;
+        padding: 0;
+
+    }
+
+    #logodiv {
+        height: 20vw;
+        width: 80%;
+
+    }
+
+    img{
+        height: auto;
+        width: 15vw;
+        margin-right: 3vw;
+    }
+
+    #h3sec1 {
+        margin: 0;
+        font-size: 3.5vw;
+    }
+
+    #h1sec1 {
+        margin: 0;
+        font-size: 6.5vw;
+
+    }
+
+    .error-msg {
+    color: rgb(190, 30, 30);
+    padding-top: 7%;
+    font-size: 3vw;
+    text-align: center;
+    }
+
+    button{
+        font-size: 4vw;
+    }
+    
+    #register{
+    margin-top: 10%;
+    font-size: 2vw;
+    }
+
+    a {
+        color: aliceblue;
+    }
+
+    .input, .label{
+        font-size: 3vw;
+    }
 }
