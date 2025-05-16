@@ -1,44 +1,42 @@
 <template>
   <section id="section01">
-        <h1 class="texts1" style="font-size: 6vh;">PROJETO</h1>
-        <h1 class="texts1" style="font-size: 20vh;">JAVA</h1>
-        <h1 class="texts1" style="font-size: 6vh;">PROJETO</h1>
-        <h1 class="texts1" style="font-size: 20vh;">JAVA</h1>
-        <h1 class="texts1" style="font-size: 6vh;">PROJETO</h1>
-        <h1 class="texts1" style="font-size: 20vh;">JAVA</h1>
-        <h1 class="texts1" style="font-size: 6vh;">PROJETO</h1>
-        <h1 class="texts1" style="font-size: 20vh;">JAVA</h1>      <h1 class="texts1" style="font-size: 6vh;">PROJETO</h1>
-        <h1 class="texts1" style="font-size: 20vh;">JAVA</h1>
   </section>
+
   <section id="section02">
 
-    <div id="logodiv">
-      <div id="textlogodiv">
-        <h3 id="h3sec1" class="textdivs1">Agenda</h3>
-        <h1 id="h1sec1" class="textdivs1">de Compromissos</h1>
+    <div class="boxlogin">
+      <div id="logodiv">
+        <img src="../assets/logowhite.png" alt="logomarca do projeto">
+        <div id="textlogodiv" class="textlogodiv">
+          <h3 id="h3sec1" class="textdivs1">Agenda</h3>
+          <h1 id="h1sec1" class="textdivs1">de Compromissos</h1>
+        </div>
       </div>
-      <img src="../assets/logowhite.png" alt="logomarca do projeto">
-    </div>
-   
 
-    <div id="divsec2">
-        <form @submit.prevent="handleLogin" class="login-form">
-            <label class="label">Usuário:</label>
-            <input type="text" class="input" id="username" v-model="username" required :disabled="authStore.isLoading" />
-            <label class="label">Senha:</label>
-            <input type="password" class="input" id="password" v-model="password" required :disabled="authStore.isLoading" />
-            <div class="footerForm">
-                <p v-if="authStore.getErrorMessage" class="error-msg">{{ authStore.getErrorMessage }}</p>
-                <button type="submit" :disabled="authStore.isLoading">
-                    {{ authStore.isLoading ? 'Entrando...' : 'Entrar' }}
+      <div id="divsec2">
+          <form @submit.prevent="handleLogin" class="login-form">
+              <label class="labeltext">Usuário:</label>
+              <input type="text" class="inputlogin" id="username" v-model="username" required :disabled="authStore.isLoading" />
+
+              <label class="labeltext">Senha:</label>
+              <input type="password" class="inputlogin" id="password" style="margin-bottom: 0;" v-model="password" required :disabled="authStore.isLoading" />
+              <p v-if="authStore.getErrorMessage" class="error-msg">{{ authStore.getErrorMessage }}</p>
+              
+              <div class="footerForm">
+                <button class="submitbutton" type="submit" :disabled="authStore.isLoading">
+                  {{ authStore.isLoading ? 'Entrando...' : 'Entrar' }}
                 </button>
-            </div>
-        </form>
-        <div id="register">
-          <label> Ainda não é cadastrado? </label>
-          <a class="link" @click="handleRegister"> Registre-se.</a>
-         </div>
+              </div>
+          </form>
+          
+          <div id="register">
+            <label> Ainda não é cadastrado? </label>
+            <a class="link" @click="handleRegister"> Registre-se.</a>
+          </div>
+      </div>
+
     </div>
+
   </section>
 </template>
 
@@ -69,4 +67,5 @@ const handleRegister = () => {
     authStore.errorMessage = null;
     router.push('/registrar'); // Redireciona para a página de login após o logout
 };
+
 </script>

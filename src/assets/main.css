@@ -1,76 +1,68 @@
-main {
-    display: flex;
-    justify-content: center;
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    font-family: "Jost", sans-serif;
+    z-index: 0;
 }
 
-body, main{
-    margin: 0;
-    height: 100vh; /* Agora o body ocupa toda a altura da tela */
+
+body{
+    background-color: #181818;
     width: 100%;
-    background-color: #0d0c0c;
+    max-height: fit-content;
+}
+
+main {
+    display: flex;
+    min-height: fit-content;
+    height: 100vh;
 }
 
 #section01 {
+    width: 70%;
+    background-image: url(https://wallpapercave.com/wp/wp8189591.jpg);
+    background-size: cover;
+    background-position: center;
+    filter: grayscale(50%);
+    border-right: 2px solid white;
+}
+
+.boxlogin{
     display: flex;
-    flex-direction: row;
-    height: 100%;
-    width: 55%;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: #1f060c;
-
+    color: #ffffff;
 }
-.texts1{
 
-    writing-mode: vertical-rl; 
-    text-orientation: upright;   
-    margin: 0;                           
-    color:#381125;
-    font-family: Inter;
-
-}
 #logodiv {
     display: flex;
-    flex-direction: row-reverse;
     justify-content: center;
     align-items: center;
-    height: 10%;
-    width: 80%;
-
+    margin-top: 20px;
 }
 
 img{
-    height: auto;
-    width: 10vh;
-    margin-right: 2vh;
+    height: 100px;
+    margin-right: 0.5rem;
 }
 
-#h3sec1 {
-    margin: 0;
-    font-size: 2.5vh;
+.textlogodiv{
+    font-size: 1.5rem;
+    min-width: 300px;
 }
-
-#h1sec1 {
-    margin: 0;
-    font-size: 1.8rem;
-
-}
-
-.textdivs1{
-    color: white;
-    font-family: Inter;
-    font-variant:normal;
-}
-
 
 #section02{
     display: flex;
-    height: 100%;
     width: 50%;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: #0d0c0c;
+    background-color: #181818;
+    padding: 2rem;
+    min-height: fit-content;
+    height: 100%;
 }
 
 
@@ -78,148 +70,131 @@ img{
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: auto;
-    width: 50%;
-    padding-top: 7vh;
-}
-
-.label{
-    display: flex;
-    padding-top: 10%;
-    width: 81%;
-    color: white;
-    font-family: Inter;
-    font-size: 1.7vh;
-    
+    margin-top: 4rem;
+    width: 100%;
 }
 
 .login-form{
     width: 100%;
-    display: grid;
-    justify-items: center;
+    display: flex;
+    flex-direction: column;
 }
 
 .footerForm{
-    position: relative;
-    width: 100%;
-    display: grid;
-    justify-items: center;
-}
+    display: flex;
+    justify-content: center;
+    margin: 3rem 0;
 
-button {
-    padding-top: 8vh;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 2vh;
-    cursor: pointer;
-    margin-top: 10px;
+    .submitbutton {
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 0.5rem 3rem;
+        background-color: white;
+        border: 2px #000000 solid;
+        color: rgb(0, 0, 0);
+        border-radius: 10px;
+        transition: 0.6s;
+        width: 50%;
+    }
+
+    .submitbutton:hover {
+        background-color: rgb(0, 0, 0);
+        border: 2px #ffffffce solid;
+        color: rgb(255, 255, 255);
+        cursor: pointer;
+        transform: scale(1.1);
+    }
+
 }
 
 .error-msg {
-  color: rgb(190, 30, 30);
-  top: 10px;
-  font-size: 1.5vh;
-  text-align: center;
-  position: absolute;
+    color: rgb(255, 0, 0);
+    font-weight: 500;
+    font-size: 1.2rem;
+    align-self: center;
 }
 
-.input {
-    display: flex;
-    justify-items: left;
-    width: 80%;
-    background: none;
+
+.inputlogin {
+    margin-top: 0.5rem;
+    width: 100%;
+    background: #eeeeee;
     border: none;
-    padding-bottom: 3.5%;
-    border-bottom: 1px solid rgb(255, 255, 255);
-    padding-top: 6%;
-    color: rgb(255, 255, 255);
-    font-size: 1.5vh;
     outline: none;
-
+    height: 40px;
+    border-radius: 10px;
+    margin-bottom: 50px;
+    color: rgb(0, 0, 0);
+    padding: 0 0.8rem;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: 0.2s;
 }
 
-.input::placeholder {
+.inputlogin::placeholder {
   color: rgb(85, 85, 85);
   text-align: center;
 }
 
-#register{
-    color: white;
-    margin-top: 10%;
-    font-family: Inter;
-}
-
 .link{
   cursor: pointer;
-  font: bold !important;
+  color: rgb(255, 174, 0) ;
+  font-weight: 500;
 }
 
-a{
-    color:aliceblue;
+#register{
+    font-size: 1.2rem;
 }
 
-@media screen and (max-width: 900px){
-
-    body{
-        height: 150vw;
-    }
-    #section01{
+@media screen and (max-width: 950px){
+    
+    #section01 {
         display: none;
     }
-    #section02 {
-        display: flex;
-        flex-direction: column;
-        height:auto;
+    
+    #section02{
+        display: block;
         width: 100%;
-        padding: 0;
-
-    }
-
-    #logodiv {
-        height: 20vw;
-        width: 80%;
-
     }
 
     img{
-        height: auto;
-        width: 15vw;
-        margin-right: 3vw;
+        height: 60px;
+        margin-right: 0.5rem;
+        width: auto;
     }
 
-    #h3sec1 {
-        margin: 0;
-        font-size: 3.5vw;
+    .textlogodiv{
+        font-size: 1rem;
+        min-width: 200px;
     }
 
-    #h1sec1 {
-        margin: 0;
-        font-size: 6.5vw;
-
+    .footerForm{
+        .submitbutton {
+            width: 70%;
+            height: 50px;
+            font-weight: 600;
+            padding: 0.5rem 3rem;
+            background-color: white;
+            border: 2px #000000 solid;
+            color: rgb(0, 0, 0);
+            border-radius: 10px;
+            transition: 0s;
+        }
+        .submitbutton:hover{
+            background-color: rgb(255, 255, 255);
+            border: 2px #000000ce solid;
+            color: rgb(0, 0, 0);
+            transform: scale(1);
+        }
     }
 
     .error-msg {
-    color: rgb(190, 30, 30);
-    padding-top: 7%;
-    font-size: 3vw;
-    text-align: center;
+        color: rgb(255, 0, 0);
+        font-weight: 400;
+        font-size: 1rem;
     }
 
-    button{
-        font-size: 4vw;
-    }
-    
     #register{
-    margin-top: 10%;
-    font-size: 2vw;
-    }
-
-    a {
-        color: aliceblue;
-    }
-
-    .input, .label{
-        font-size: 3vw;
+        font-size: 1rem;
     }
 }
