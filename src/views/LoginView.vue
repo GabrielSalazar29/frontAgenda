@@ -1,5 +1,8 @@
 <template>
   <section id="section01">
+    <div class="sectionLogo">
+      <img src="/src/assets/javalogo.png" alt="javalogo" class="javalogo">
+    </div>
   </section>
 
   <section id="section02">
@@ -75,5 +78,19 @@ const handleRegister = () => {
   main{
     display: flex;
     flex-direction: row;
+  }
+
+  .sectionLogo{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    img{
+      filter: contrast(1000%);
+      width: 50%;
+      height: auto;
+    }
   }
 </style>
