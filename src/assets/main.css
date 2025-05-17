@@ -7,6 +7,11 @@
     z-index: 0;
 }
 
+:root{
+    --fc-border-color: #2d2d2d;
+    --fc-list-event-hover-bg-color: #000
+}
+
 body{
     background-color: #181818;
     width: 100%;
