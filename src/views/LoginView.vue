@@ -69,3 +69,11 @@ const handleRegister = () => {
 };
 
 </script>
+
+
+<style scoped>
+  main{
+    display: flex;
+    flex-direction: row;
+  }
+</style>
