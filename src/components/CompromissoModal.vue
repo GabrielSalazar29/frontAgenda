@@ -4,8 +4,12 @@
       <h3>{{ mode === 'create' ? 'Novo Compromisso' : 'Editar Compromisso' }}</h3>
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
+          <label for="titulo">Título:</label>
+          <input type="text" id="titulo" v-model="formData.titulo" required />
+        </div>
+        <div class="form-group">
           <label for="descricao">Descrição:</label>
-          <input type="text" id="descricao" v-model="formData.descricao" required />
+          <textarea id="descricao" v-model="formData.descricao" rows="3"></textarea>
         </div>
         <div class="form-group">
           <label for="dataHoraInicio">Início:</label>
@@ -42,9 +46,10 @@ import type { PropType } from 'vue';
 
 // Interface para os dados do compromisso que o modal manipula
 export interface CompromissoFormData {
-  id?: number | string; // ID é string no FullCalendar Event, número na API
+  id?: number | string;
+  titulo: string; // NOVO CAMPO
   descricao: string;
-  dataHoraInicio: string; // Formato 'YYYY-MM-DDTHH:MM' para datetime-local
+  dataHoraInicio: string;
   dataHoraFim: string;
   local?: string;
 }
@@ -58,12 +63,11 @@ const props = defineProps({
     type: String as PropType<'create' | 'edit'>,
     required: true,
   },
-  // Evento do FullCalendar (para edição) ou data selecionada (para criação)
   initialData: {
-    type: Object as PropType<Partial<CompromissoFormData> | null>, // Partial torna todos os campos opcionais
+    type: Object as PropType<Partial<CompromissoFormData> | null>,
     default: null,
   },
-  selectedDate: { // Usado para preencher a data de início no modo 'create'
+  selectedDate: {
     type: String as PropType<string | null>,
     default: null,
   }
@@ -72,6 +76,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'save', 'delete']);
 
 const formData = ref<CompromissoFormData>({
+  titulo: '', // NOVO CAMPO
   descricao: '',
   dataHoraInicio: '',
   dataHoraFim: '',
@@ -79,14 +84,13 @@ const formData = ref<CompromissoFormData>({
 });
 const errorMessage = ref<string | null>(null);
 
-// Observa mudanças em initialData (quando um evento é selecionado para edição)
-// ou selectedDate (quando uma data é clicada para criação)
 watch(() => [props.initialData, props.selectedDate, props.mode], ([newInitialData, newSelectedDate, newMode]) => {
   errorMessage.value = null;
   if (props.isOpen) {
     if (newMode === 'edit' && newInitialData) {
       formData.value = {
-        id: newInitialData.id, 
+        id: newInitialData.id,
+        titulo: newInitialData.titulo || '', // NOVO CAMPO
         descricao: newInitialData.descricao || '',
         dataHoraInicio: newInitialData.dataHoraInicio ? formatDateTimeForInput(newInitialData.dataHoraInicio) : '',
         dataHoraFim: newInitialData.dataHoraFim ? formatDateTimeForInput(newInitialData.dataHoraFim) : '',
@@ -94,19 +98,17 @@ watch(() => [props.initialData, props.selectedDate, props.mode], ([newInitialDat
       };
     } else if (newMode === 'create') {
       const startDate = newSelectedDate ? new Date(newSelectedDate) : new Date();
-      // Ajusta para o início da próxima hora cheia ou meia hora
       if (startDate.getMinutes() > 0 && startDate.getMinutes() < 30) {
         startDate.setMinutes(30, 0, 0);
       } else if (startDate.getMinutes() > 30) {
         startDate.setHours(startDate.getHours() + 1, 0, 0, 0);
       } else {
-         startDate.setMinutes(0,0,0); // Hora cheia
+         startDate.setMinutes(0,0,0);
       }
-
-
       const endDate = new Date(startDate.getTime() + (60 * 60 * 1000)); // Adiciona 1 hora por padrão
 
       formData.value = {
+        titulo: '', // NOVO CAMPO
         descricao: '',
         dataHoraInicio: formatDateTimeForInput(startDate.toISOString()),
         dataHoraFim: formatDateTimeForInput(endDate.toISOString()),
@@ -118,9 +120,8 @@ watch(() => [props.initialData, props.selectedDate, props.mode], ([newInitialDat
 
 const formatDateTimeForInput = (dateTimeString: string | Date): string => {
   const date = new Date(dateTimeString);
-  if (isNaN(date.getTime())) return ''; // Retorna vazio se a data for inválida
+  if (isNaN(date.getTime())) return '';
 
-  // Formata para YYYY-MM-DDTHH:MM
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const day = date.getDate().toString().padStart(2, '0');
@@ -129,16 +130,14 @@ const formatDateTimeForInput = (dateTimeString: string | Date): string => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-
 const closeModal = () => {
   emit('close');
 };
 
 const handleSubmit = () => {
   errorMessage.value = null;
-  // Validação básica
-  if (!formData.value.descricao.trim()) {
-    errorMessage.value = "A descrição é obrigatória.";
+  if (!formData.value.titulo.trim()) { // Validação para o título
+    errorMessage.value = "O título é obrigatório.";
     return;
   }
   if (!formData.value.dataHoraInicio || !formData.value.dataHoraFim) {
@@ -150,7 +149,6 @@ const handleSubmit = () => {
     return;
   }
 
-  // Converte de volta para ISO string completa se o datetime-local não incluir segundos
   const dataToSend = {
     ...formData.value,
     dataHoraInicio: new Date(formData.value.dataHoraInicio).toISOString(),
@@ -211,12 +209,14 @@ const handleDelete = () => {
 }
 
 .form-group input[type="text"],
-.form-group input[type="datetime-local"] {
+.form-group input[type="datetime-local"],
+.form-group textarea { /* Estilo para textarea */
   width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
+  font-family: inherit; /* Garante que a fonte seja a mesma */
 }
 
 .modal-actions {

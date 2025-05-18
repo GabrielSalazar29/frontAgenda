@@ -70,6 +70,7 @@ import type { CompromissoFormData } from '../components/CompromissoModal.vue';
 
 interface ApiCompromisso {
   id: number;
+  titulo: string;
   descricao: string;
   dataHoraInicio: string;
   dataHoraFim: string;
@@ -96,7 +97,8 @@ const modalSelectedDate = ref<string | null>(null);
 const calendarEvents = computed<EventInput[]>(() => {
   return compromissos.value.map(comp => ({
     id: String(comp.id),
-    title: comp.descricao,
+    title: comp.titulo,
+    descricao: comp.descricao,
     start: comp.dataHoraInicio,
     end: comp.dataHoraFim,
     extendedProps: {
@@ -121,7 +123,8 @@ const openCompromissoModal = (
     const event = data as EventApi; // Type assertion
     modalInitialData.value = {
       id: event.id,
-      descricao: event.title,
+      titulo: event.title,
+      descricao: event.extendedProps.descricao,
       dataHoraInicio: event.startStr, // ou event.start?.toISOString()
       dataHoraFim: event.endStr,     // ou event.end?.toISOString()
       local: event.extendedProps.local,
@@ -202,7 +205,8 @@ const calendarOptions = ref<CalendarOptions>({
     } else {
       try {
         const updatedCompromisso = {
-          descricao: dropInfo.event.title,
+          titulo: dropInfo.event.title,
+          descricao: dropInfo.event.extendedProps.descricao,
           dataHoraInicio: dropInfo.event.start?.toISOString(),
           dataHoraFim: dropInfo.event.end?.toISOString(),
           local: dropInfo.event.extendedProps.local,
@@ -225,7 +229,8 @@ const calendarOptions = ref<CalendarOptions>({
     } else {
        try {
         const updatedCompromisso = {
-          descricao: resizeInfo.event.title,
+          titulo: resizeInfo.event.title,
+          descricao: resizeInfo.event.extendedProps.descricao,
           dataHoraInicio: resizeInfo.event.start?.toISOString(),
           dataHoraFim: resizeInfo.event.end?.toISOString(),
           local: resizeInfo.event.extendedProps.local,
