@@ -30,7 +30,7 @@
           <button type="submit" class="btn-save">
             {{ mode === 'create' ? 'Criar' : 'Salvar Alterações' }}
           </button>
-          <button v.if="mode === 'edit'" type="button" @click="handleDelete" class="btn-delete">
+          <button v-if="mode === 'edit'" type="button" @click="handleDelete" class="btn-delete">
             Excluir
           </button>
           <button type="button" @click="closeModal" class="btn-cancel">Cancelar</button>
@@ -47,9 +47,9 @@ import type { PropType } from 'vue';
 // Interface para os dados do compromisso que o modal manipula
 export interface CompromissoFormData {
   id?: number | string;
-  titulo: string; // NOVO CAMPO
+  titulo: string;
   descricao: string;
-  dataHoraInicio: string;
+  dataHoraInicio: string; // Formato 'YYYY-MM-DDTHH:MM' para datetime-local
   dataHoraFim: string;
   local?: string;
 }
@@ -67,7 +67,7 @@ const props = defineProps({
     type: Object as PropType<Partial<CompromissoFormData> | null>,
     default: null,
   },
-  selectedDate: {
+  selectedDate: { // Espera-se que seja uma string como "YYYY-MM-DD" do FullCalendar dateClick
     type: String as PropType<string | null>,
     default: null,
   }
@@ -76,7 +76,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'save', 'delete']);
 
 const formData = ref<CompromissoFormData>({
-  titulo: '', // NOVO CAMPO
+  titulo: '',
   descricao: '',
   dataHoraInicio: '',
   dataHoraFim: '',
@@ -90,40 +90,64 @@ watch(() => [props.initialData, props.selectedDate, props.mode], ([newInitialDat
     if (newMode === 'edit' && newInitialData) {
       formData.value = {
         id: newInitialData.id,
-        titulo: newInitialData.titulo || '', // NOVO CAMPO
+        titulo: newInitialData.titulo || '',
         descricao: newInitialData.descricao || '',
-        dataHoraInicio: newInitialData.dataHoraInicio ? formatDateTimeForInput(newInitialData.dataHoraInicio) : '',
-        dataHoraFim: newInitialData.dataHoraFim ? formatDateTimeForInput(newInitialData.dataHoraFim) : '',
+        // Ao editar, newInitialData.dataHoraInicio é provavelmente uma string ISO (UTC) ou já formatada.
+        // new Date() a converterá para um objeto Date (que internamente é UTC mas métodos são locais).
+        // formatDateTimeForInput então pegará os componentes locais desse objeto Date.
+        dataHoraInicio: newInitialData.dataHoraInicio ? formatDateTimeForInput(new Date(newInitialData.dataHoraInicio)) : '',
+        dataHoraFim: newInitialData.dataHoraFim ? formatDateTimeForInput(new Date(newInitialData.dataHoraFim)) : '',
         local: newInitialData.local || '',
       };
     } else if (newMode === 'create') {
-      const startDate = newSelectedDate ? new Date(newSelectedDate) : new Date();
-      if (startDate.getMinutes() > 0 && startDate.getMinutes() < 30) {
-        startDate.setMinutes(30, 0, 0);
-      } else if (startDate.getMinutes() > 30) {
-        startDate.setHours(startDate.getHours() + 1, 0, 0, 0);
+      const defaultHour = 9; // Hora local padrão para início: 09:00
+      const defaultMinute = 0;
+      let initialDateForModal: Date;
+
+      if (newSelectedDate) {
+        // newSelectedDate de dateClick do FullCalendar é geralmente "YYYY-MM-DD" para cliques em dias.
+        // Precisamos construir um objeto Date que represente esta data no fuso horário local.
+        const parts = newSelectedDate.split('-'); // ex: ["2025", "05", "20"]
+        if (parts.length === 3) {
+          const year = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1; // Mês em JavaScript é 0-indexado
+          const day = parseInt(parts[2], 10);
+          // Cria o objeto Date com a data local e a hora padrão local
+          initialDateForModal = new Date(year, month, day, defaultHour, defaultMinute, 0);
+        } else {
+          // Fallback se newSelectedDate não estiver no formato esperado
+          initialDateForModal = new Date();
+          initialDateForModal.setHours(defaultHour, defaultMinute, 0, 0);
+        }
       } else {
-         startDate.setMinutes(0,0,0);
+        // Fallback para a data/hora atual se nenhuma data for selecionada
+        initialDateForModal = new Date();
+        initialDateForModal.setHours(defaultHour, defaultMinute, 0, 0); // Define para a hora padrão local
       }
-      const endDate = new Date(startDate.getTime() + (60 * 60 * 1000)); // Adiciona 1 hora por padrão
+
+      const endDate = new Date(initialDateForModal.getTime() + (60 * 60 * 1000)); // Adiciona 1 hora por padrão
 
       formData.value = {
-        titulo: '', // NOVO CAMPO
+        titulo: '',
         descricao: '',
-        dataHoraInicio: formatDateTimeForInput(startDate.toISOString()),
-        dataHoraFim: formatDateTimeForInput(endDate.toISOString()),
+        dataHoraInicio: formatDateTimeForInput(initialDateForModal),
+        dataHoraFim: formatDateTimeForInput(endDate),
         local: '',
       };
     }
   }
 }, { immediate: true, deep: true });
 
-const formatDateTimeForInput = (dateTimeString: string | Date): string => {
-  const date = new Date(dateTimeString);
+/**
+ * Formata um objeto Date para a string 'YYYY-MM-DDTHH:MM'
+ * esperada pelo input datetime-local.
+ * O objeto Date de entrada já deve representar a data/hora local correta.
+ */
+const formatDateTimeForInput = (date: Date): string => {
   if (isNaN(date.getTime())) return '';
 
   const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Mês é 0-11, então +1
   const day = date.getDate().toString().padStart(2, '0');
   const hours = date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes().toString().padStart(2, '0');
@@ -136,7 +160,7 @@ const closeModal = () => {
 
 const handleSubmit = () => {
   errorMessage.value = null;
-  if (!formData.value.titulo.trim()) { // Validação para o título
+  if (!formData.value.titulo.trim()) {
     errorMessage.value = "O título é obrigatório.";
     return;
   }
@@ -144,15 +168,22 @@ const handleSubmit = () => {
     errorMessage.value = "As datas de início e fim são obrigatórias.";
     return;
   }
-  if (new Date(formData.value.dataHoraFim) <= new Date(formData.value.dataHoraInicio)) {
+  
+  // formData.value.dataHoraInicio é uma string como "2025-05-20T09:00" (representando hora local)
+  // new Date("YYYY-MM-DDTHH:MM") cria um objeto Date interpretando a string como hora local.
+  const inicioDate = new Date(formData.value.dataHoraInicio); 
+  const fimDate = new Date(formData.value.dataHoraFim);
+
+  if (fimDate <= inicioDate) {
     errorMessage.value = "A data de término deve ser posterior à data de início.";
     return;
   }
 
+  // Converte para ISO string (que é sempre UTC com 'Z' no final) para enviar ao backend.
   const dataToSend = {
     ...formData.value,
-    dataHoraInicio: new Date(formData.value.dataHoraInicio).toISOString(),
-    dataHoraFim: new Date(formData.value.dataHoraFim).toISOString(),
+    dataHoraInicio: inicioDate.toISOString(),
+    dataHoraFim: fimDate.toISOString(),
   };
 
   emit('save', dataToSend);
@@ -210,13 +241,13 @@ const handleDelete = () => {
 
 .form-group input[type="text"],
 .form-group input[type="datetime-local"],
-.form-group textarea { /* Estilo para textarea */
+.form-group textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
-  font-family: inherit; /* Garante que a fonte seja a mesma */
+  font-family: inherit;
 }
 
 .modal-actions {
