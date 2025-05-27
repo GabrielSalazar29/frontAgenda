@@ -2,8 +2,7 @@
 
 
 <body>
-    <section id="rgcolumn">
-
+    <section id="rgcolumn" class="sections">
 
       <div id="logodiv">
         <img src="../assets/logowhite.png" alt="logomarca do projeto">
@@ -12,35 +11,25 @@
           <h1 id="h1sec1" class="textdivs1">de Compromissos</h1>
         </div>
       </div>
-
-      <h2> Logado como: Negão. </h2>
-      <div class="little"> 
-        <h3 class="textlittle">Calendário</h3>
-        <div class="littlebox">
-
-        </div>
+      <div id="log-conteiner">
+          <h2> Logado como: Negão. </h2>
       </div>
-
-      <div class="little"> 
-        <h3 class="textlittle">Mais importantes</h3>
-        <div class="littlebox">
-          
-        </div>
-      </div>
-
       <button @click="handleLogout" class="logout-button">LOGOUT</button>
 
     </section>
 
-  <section id="calendar">
+  <section id="calendar" class="sections">
     <div class="calendar-container">
       <FullCalendar :options="calendarOptions" />
     </div>
   </section>
+
   <section id="secrender" class="oculto">
       <button @click="handleLogout" id="button-logout" class="oculto">LOGOUT</button>
   </section>
 </body>
+
+
 <CompromissoModal
    :is-open="isModalOpen"
    :mode="modalMode"
@@ -50,6 +39,8 @@
    @save="saveCompromisso"
    @delete="deleteCompromisso"
  />
+
+
 </template>
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick } from 'vue';
@@ -283,34 +274,44 @@ onMounted(() => {
 <style scoped>
 body {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   height: 100%;
   width: 100%;
   /* background-color: ; */
 }
 
-  #rgcolumn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-around;
-    height: rem;
-    width: 45rem;
-    background-color: #0D0C0C;
-  }
 
-  #logodiv {
-    margin-top: 2rem;
+
+#rgcolumn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 10rem;
+  justify-content: space-around;
+  background-color: #0D0C0C;
 }
-h2{
-  width: 80%;
-  margin: 2rem;
+
+#logodiv {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 0;
+  margin-left: 3%;
+}
+
+
+#log-conteiner{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   color: white;
 }
+
 #calendar{
   display: flex;
   align-items: center;
-  height: 100%;
   width: 100%;
   background-color:#1B1B1B;
 }
@@ -332,8 +333,9 @@ h2{
 
 .littlebox{
   background-color: #1D1D1D;
-  width: auto;
-  height: 100%;
+  width: 30rem;
+  margin-right: 2.5rem;
+  height: 20rem;
 }
 
  .logout-button{
@@ -345,19 +347,19 @@ h2{
     border: 2px white solid;
     border-radius: 20px;
     height: 50px;
+    width: 250px;
     transition: 0.5s;
     font-weight: 500;
     margin: 3rem;
+    margin-inline: 2rem;
   }
-  
+
   .logout-button:hover{
     transition: 0.5s;
     box-shadow: rgb(255, 198, 11) 0px 0px 5px 0px;
     cursor: pointer;
     transform: scale(1.03);
   }
-
-  
 
 .calendar-container {
   width: 100%;
@@ -370,24 +372,45 @@ h2{
   display: none;
 }
 
-@media screen and (max-width: 950px){
+@media screen and (max-width: 955px){
   body{
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    min-width: 400px;
     align-items: center;
+
   }
 
   #rgcolumn{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     width: 100%;
-    padding-bottom: 4rem;
+    height: 50rem;
+    margin-bottom: 5rem;
   }
+
+  #log-conteiner{
+    margin-top: 4rem;
+    width: 100%;
+    height: 5rem;
+  }
+
   #logodiv{
     display: flex;
     width: 80%;
+    margin-top: 6rem;
+    margin-left: 0;
+
   }
+
   .logout-button{
     display: None;
   }
+
   #calendar{
   display: flex;
   align-items: center;
@@ -396,13 +419,26 @@ h2{
   background-color:#1B1B1B;
   }
 
-  
+
   .oculto{
     display: flex;
     flex-direction: column;
     justify-items: center;
     height: 12vh;
   }
+
+
+
+
+  #secrender{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 5rem;
+  }
+
 
   button{
     justify-content: center;
