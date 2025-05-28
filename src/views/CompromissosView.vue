@@ -12,7 +12,7 @@
         </div>
       </div>
       <div id="log-conteiner">
-          <h2> Logado como: Negão. </h2>
+          <h2> Logado como: {{  authStore.getUsername?.charAt(0).toUpperCase() + authStore.getUsername?.slice(1) }}. </h2>
       </div>
       <button @click="handleLogout" class="logout-button">LOGOUT</button>
 
