@@ -49,12 +49,12 @@ main {
 }
 
 img{
-    height: 100px;
+    height: 70px;
     margin-right: 0.5rem;
 }
 
 .textlogodiv{
-    font-size: 1.5rem;
+    font-size: 1rem;
     min-width: 300px;
 }
 

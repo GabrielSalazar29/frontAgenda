@@ -1,8 +1,7 @@
 <template>
 
-
-<body>
-    <section id="rgcolumn" class="sections">
+<div class="body">
+    <section id="rgcolumn">
 
       <div id="logodiv">
         <img src="../assets/logowhite.png" alt="logomarca do projeto">
@@ -18,7 +17,7 @@
 
     </section>
 
-  <section id="calendar" class="sections">
+  <section id="calendar">
     <div class="calendar-container">
       <FullCalendar :options="calendarOptions" />
     </div>
@@ -27,7 +26,7 @@
   <section id="secrender" class="oculto">
       <button @click="handleLogout" id="button-logout" class="oculto">LOGOUT</button>
   </section>
-</body>
+</div>
 
 
 <CompromissoModal
@@ -272,23 +271,23 @@ onMounted(() => {
 </script>
 
 <style scoped>
-body {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-  /* background-color: ; */
+.body {
+    display: flex;
+    flex-direction: column;
+    height: 110vh !important;
+    overflow: hidden;
+    width: 100%;
+    margin: 0;
 }
 
 
-
 #rgcolumn {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  min-height: 10rem;
-  justify-content: space-around;
-  background-color: #0D0C0C;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 6rem;
+    justify-content: space-around;
+    background-color: #0D0C0C;
 }
 
 #logodiv {
@@ -309,33 +308,13 @@ body {
   color: white;
 }
 
-#calendar{
-  display: flex;
-  align-items: center;
-  width: 100%;
-  background-color:#1B1B1B;
-}
-
-.little{
-  display: flex;
-  flex-direction: column;
-  width: 80%;
-  height: 20rem;
-  margin: 2rem;
-  color: white;
-}
-
-.textlittle {
-  padding-left: 1rem;
-  font-size: 1.4rem;
-  padding-bottom: 0.3rem;
-}
-
-.littlebox{
-  background-color: #1D1D1D;
-  width: 30rem;
-  margin-right: 2.5rem;
-  height: 20rem;
+#calendar {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    background-color: #1B1B1B;
+    flex-grow: 1;
 }
 
  .logout-button{
@@ -362,106 +341,108 @@ body {
   }
 
 .calendar-container {
-  width: 100%;
-  height: calc(100vh - 120px); /* Ajuste conforme necessário */
-  padding: 10px;
-  box-sizing: border-box;
+    width: 100%;
+    padding: 10px;
+    padding-bottom: 0;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .oculto{
   display: none;
 }
 
-@media screen and (max-width: 955px){
-  body{
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-    min-width: 400px;
-    align-items: center;
+@media screen and (max-width: 750px){
+    .body {
+        display: flex;
+        flex-direction: column;
+        /* Remover justify-content: space-between; se ainda estiver aqui */
+        min-height: 100vh; /* Manter min-height para permitir rolagem */
+        width: 100%;
+        align-items: center;
+        overflow-y: auto; /* Manter para controlar o scroll em telas menores */
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-  }
+    #rgcolumn {
+        flex-direction: column;
+        height: auto; /* Permite que a altura se ajuste ao conteúdo */
+        width: 100%;
+        /* Ajustar margins/paddings para evitar espaçamento excessivo */
+        padding-bottom: 2rem; /* Adicionar um pequeno padding na parte inferior para espaçamento */
+    }
 
-  #rgcolumn{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 50rem;
-    margin-bottom: 5rem;
-  }
+    #log-conteiner {
+        margin-top: 2rem; /* Reduzir a margem superior */
+        width: 100%;
+        height: auto; /* Ajustar a altura para ser flexível */
+    }
 
-  #log-conteiner{
-    margin-top: 4rem;
-    width: 100%;
-    height: 5rem;
-  }
+    #logodiv {
+        display: flex;
+        width: 90%; /* Ajustar para ocupar mais largura */
+        margin-top: 2rem; /* Reduzir a margem superior */
+        margin-left: 0;
+        justify-content: center; /* Centralizar logo */
+    }
 
-  #logodiv{
-    display: flex;
-    width: 80%;
-    margin-top: 6rem;
-    margin-left: 0;
+    /* Manter .logout-button display: none; se for a intenção */
+    .logout-button {
+        display: none;
+    }
 
-  }
+    #calendar {
+        display: flex;
+        align-items: center;
+        height: auto; /* Remover height fixo, deixar flex-grow lidar com a altura */
+        width: 100%;
+        background-color: #1B1B1B;
+        padding-top: 1rem; /* Adicionar um pequeno padding superior para espaçamento */
+    }
 
-  .logout-button{
-    display: None;
-  }
+    .calendar-container {
+        width: 100%;
+        height: 100%; /* Ocupa a altura total do seu pai (#calendar) */
+        padding: 10px;
+        box-sizing: border-box;
+    }
 
-  #calendar{
-  display: flex;
-  align-items: center;
-  height: 100%;
-  width: 100%;
-  background-color:#1B1B1B;
-  }
+    .oculto {
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Usar justify-content ao invés de justify-items */
+        height: auto; /* Deixar a altura flexível */
+        width: 100%;
+        /* Adicionar padding ou margin para espaçamento */
+        background-color: transparent;
+    }
 
+    #secrender {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin: 0; /* Reduzir margem superior */
+    }
 
-  .oculto{
-    display: flex;
-    flex-direction: column;
-    justify-items: center;
-    height: 12vh;
-  }
+    button {
+        justify-content: center;
+        font-size: 1.2rem;
+        width: 80%;
+        padding: 0 1rem;
+        background-color: rgb(0, 0, 0);
+        color: white;
+        border: none;
+        border: 2px white solid;
+        border-radius: 20px;
+        height: 50px;
+        transition: 0.5s;
+        font-weight: 500;
+        margin: 1.5rem 0; /* Ajustar as margens para cima/baixo */
 
-
-
-
-  #secrender{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    margin-top: 5rem;
-  }
-
-
-  button{
-    justify-content: center;
-    font-size: 1.2rem;
-    width: 80%;
-    padding: 0 1rem;
-    background-color: rgb(0, 0, 0);
-    color: white;
-    border: none;
-    border: 2px white solid;
-    border-radius: 20px;
-    height: 50px;
-    transition: 0.5s;
-    font-weight: 500;
-    margin: 3rem;
-  }
-
-  button:hover{
-    transition: 0.5s;
-    box-shadow: rgb(255, 198, 11) 0px 0px 5px 0px;
-    cursor: pointer;
-    transform: scale(1.03);
-  }
+    }
 
 }
 
