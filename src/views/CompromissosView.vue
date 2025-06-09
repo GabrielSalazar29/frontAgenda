@@ -13,6 +13,9 @@
       <div id="log-conteiner">
           <h2> Logado como: {{  authStore.getUsername?.charAt(0).toUpperCase() + authStore.getUsername?.slice(1) }}. </h2>
       </div>
+       <RouterLink to="/amigos">Meus Amigos</RouterLink> |
+        <RouterLink to="/solicitacoes-amizade">Solicitações</RouterLink> |
+        <RouterLink to="/encontrar-amigos">Encontrar Amigos</RouterLink> | <span>Olá, {{ authStore.getUsername }}!</span>
       <button @click="handleLogout" class="logout-button">LOGOUT</button>
 
     </section>

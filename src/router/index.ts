@@ -2,6 +2,9 @@ import { createRouter, createWebHistory, type RouteLocationNormalized, type Navi
 import LoginView from '@/views/LoginView.vue';
 import RegisterView from '@/views/RegisterView.vue';
 import { useAuthStore } from '../stores/authStore';
+import FriendsListView from '../views/FriendsListView.vue';
+import FriendRequestsView from '../views/FriendRequestsView.vue';
+import FindUsersView from '../views/FindUsersView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,6 +28,22 @@ const router = createRouter({
       // Exemplo de lazy loading para o componente de compromissos:
       component: () => import('../views/CompromissosView.vue'), // Crie este arquivo
       meta: { requiresAuth: true } // Marca esta rota como necessitando de autenticação
+    }, {
+      path: '/amigos',
+      name: 'friendsList',
+      component: FriendsListView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/solicitacoes-amizade',
+      name: 'friendRequests',
+      component: FriendRequestsView,
+      meta: { requiresAuth: true }
+    },{
+      path: '/encontrar-amigos',
+      name: 'findUsers',
+      component: FindUsersView,
+      meta: { requiresAuth: true }
     },
   ]
 });
