@@ -1,37 +1,66 @@
 import { defineStore } from 'pinia';
-import apiClient from '../services/api'; // Usaremos axios aqui também
-import { useRouter } from 'vue-router'; // Para redirecionamento programático
-
-// URL da sua API backend
-const API_BASE_URL = 'http://localhost:8080/api'; // Ajuste se necessário
+import apiClient from '../services/api';
+import type { UsuarioSummaryDTO } from '../types/amizade';
 
 interface AuthState {
+  user: UsuarioSummaryDTO | null;
   token: string | null;
-  username: string | null; // Ou um objeto de usuário mais completo
   errorMessage: string | null;
   loading: boolean;
 }
 
-// Defina uma interface para as credenciais de login
+interface LoginResponse {
+    token: string;
+    user: UsuarioSummaryDTO;
+}
+
 interface LoginCredentials {
   username: string;
   password: string;
 }
 
 export const useAuthStore = defineStore('auth', {
-  state: (): AuthState => ({
-    token: localStorage.getItem('authToken'), // Tenta carregar o token do localStorage na inicialização
-    username: localStorage.getItem('username'), // Tenta carregar o username
-    errorMessage: null,
-    loading: false,
-  }),
+  state: (): AuthState => {
+    // ---- MUDANÇA: Lógica de inicialização mais segura ----
+    let userObject: UsuarioSummaryDTO | null = null;
+    let tokenValue: string | null = null;
+
+    try {
+      const userString = localStorage.getItem('user');
+      tokenValue = localStorage.getItem('authToken');
+
+      // Verifica se a string do utilizador existe e não é a palavra "undefined"
+      if (userString && userString !== 'undefined') {
+        userObject = JSON.parse(userString);
+      }
+      
+      // Se não houver token, o utilizador também não deve ser considerado logado
+      if (!tokenValue) {
+        userObject = null;
+      }
+
+    } catch (e) {
+      console.error("Erro ao aceder ao localStorage ou ao fazer parse dos dados. A sua sessão pode não ser restaurada.", e);
+      // Garante que o estado seja limpo se os dados estiverem corrompidos ou inacessíveis
+      localStorage.removeItem('user');
+      localStorage.removeItem('authToken');
+    }
+
+    return {
+      user: userObject,
+      token: tokenValue,
+      errorMessage: null,
+      loading: false,
+    };
+  },
 
   getters: {
-    isAuthenticated: (state): boolean => !!state.token,
+    isAuthenticated: (state): boolean => !!state.token && !!state.user,
     isLoading: (state): boolean => state.loading,
     getErrorMessage: (state): string | null => state.errorMessage,
-    getUsername: (state): string | null => state.username,
+    getUsername: (state): string | null => state.user?.username || null,
     getToken: (state): string | null => state.token,
+    getUser: (state): UsuarioSummaryDTO | null => state.user,
   },
 
   actions: {
@@ -39,34 +68,30 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true;
       this.errorMessage = null;
       try {
-        const response = await apiClient.post<{ token: string, type?: string }>( // Define o tipo da resposta esperada
-          `${API_BASE_URL}/auth/login`,
+        const response = await apiClient.post<LoginResponse>(
+          `/auth/login`,
           credentials
         );
 
         const receivedToken = response.data.token;
+        const receivedUser = response.data.user;
+
         this.token = receivedToken;
-        this.username = credentials.username; // Ou decodifique do token se ele contiver o username
+        this.user = receivedUser;
 
         localStorage.setItem('authToken', receivedToken);
-        localStorage.setItem('username', credentials.username);
+        localStorage.setItem('user', JSON.stringify(receivedUser));
 
-        console.log('Login bem-sucedido, token salvo:', receivedToken);
+        console.log('Login bem-sucedido, utilizador e token salvos:', receivedUser);
 
-        // Após o login, o axios interceptor (que vamos criar) pegará o token do store ou localStorage.
-        // Redirecionamento será feito pelo componente que chamou o login.
-
-      } catch (error: any) { // Use 'any' ou um tipo de erro mais específico se souber
+      } catch (error: any) {
         console.error('Erro no login (authStore):', error);
-        localStorage.removeItem('authToken'); // Garante que token inválido seja removido
-        localStorage.removeItem('username');
-        this.token = null;
-        this.username = null;
+        this.logout();
         if (error.response) {
           if (error.response.data && error.response.data.message) {
             this.errorMessage = `Erro: ${error.response.data.message}`;
           } else if (error.response.status === 401 || error.response.status === 403) {
-            this.errorMessage = 'Usuário ou senha inválidos.';
+            this.errorMessage = 'Utilizador ou senha inválidos.';
           } else {
             this.errorMessage = `Erro do servidor: ${error.response.status}`;
           }
@@ -75,7 +100,7 @@ export const useAuthStore = defineStore('auth', {
         } else {
           this.errorMessage = 'Erro ao tentar fazer login.';
         }
-        throw error; // Re-lança o erro para que o componente possa tratá-lo se necessário
+        throw error;
       } finally {
         this.loading = false;
       }
@@ -83,26 +108,31 @@ export const useAuthStore = defineStore('auth', {
 
     logout() {
       this.token = null;
-      this.username = null;
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('username');
-      console.log('Logout realizado, token removido.');
-      // O redirecionamento geralmente é feito pelo componente que chama o logout
-      // ou por um navigation guard.
+      this.user = null;
+      try {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+      } catch (e) {
+        console.error("Erro ao limpar o localStorage no logout.", e);
+      }
+      console.log('Logout realizado, token e utilizador removidos.');
     },
-
-    // Ação para ser chamada quando a aplicação inicia, para tentar carregar o estado
-    // (já fazemos isso na inicialização do state, mas pode ser útil para lógica adicional)
+    
+    // A lógica de inicialização agora está dentro do 'state', tornando esta ação menos crítica,
+    // mas pode ser mantida para forçar uma recarga do estado se necessário.
     initializeAuth() {
-      const token = localStorage.getItem('authToken');
-      const username = localStorage.getItem('username');
-      if (token && username) {
-        this.token = token;
-        this.username = username;
-        console.log('Sessão restaurada do localStorage.');
-      } else {
-        this.token = null;
-        this.username = null;
+      try {
+        const token = localStorage.getItem('authToken');
+        const userString = localStorage.getItem('user');
+        if (token && userString && userString !== 'undefined') {
+          this.token = token;
+          this.user = JSON.parse(userString);
+        } else {
+          this.logout();
+        }
+      } catch(e) {
+        console.error("Falha ao inicializar autenticação a partir do storage.", e);
+        this.logout();
       }
     }
   },

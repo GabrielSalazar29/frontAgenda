@@ -1,8 +1,6 @@
 <template>
-
-<div class="body">
+  <div class="body">
     <section id="rgcolumn">
-
       <div id="logodiv">
         <img src="../assets/logowhite.png" alt="logomarca do projeto">
         <div id="textlogodiv" class="textlogodiv">
@@ -11,56 +9,58 @@
         </div>
       </div>
       <div id="log-conteiner">
-          <h2> Logado como: {{  authStore.getUsername?.charAt(0).toUpperCase() + authStore.getUsername?.slice(1) }}. </h2>
+        <h2> Logado como: {{ authStore.getUsername?.charAt(0).toUpperCase() + authStore.getUsername?.slice(1) }}. </h2>
       </div>
-       <RouterLink to="/amigos">Meus Amigos</RouterLink> |
-        <RouterLink to="/solicitacoes-amizade">Solicitações</RouterLink> |
-        <RouterLink to="/encontrar-amigos">Encontrar Amigos</RouterLink> | <span>Olá, {{ authStore.getUsername }}!</span>
+      <RouterLink to="/amigos">Meus Amigos</RouterLink> |
+      <RouterLink to="/solicitacoes-amizade">Solicitações</RouterLink> |
+      <RouterLink to="/encontrar-amigos">Encontrar Amigos</RouterLink> | <span>Olá, {{ authStore.getUsername }}!</span>
       <button @click="handleLogout" class="logout-button">LOGOUT</button>
-
     </section>
 
-  <section id="calendar">
-    <div class="calendar-container">
-      <FullCalendar :options="calendarOptions" />
-    </div>
-  </section>
+    <section id="calendar">
+      <div class="calendar-container">
+        <FullCalendar :options="calendarOptions" ref="fullCalendarRef" />
+      </div>
+    </section>
 
-  <section id="secrender" class="oculto">
+    <section id="secrender" class="oculto">
       <button @click="handleLogout" id="button-logout" class="oculto">LOGOUT</button>
-  </section>
-</div>
+    </section>
 
-
-<CompromissoModal
-   :is-open="isModalOpen"
-   :mode="modalMode"
-   :initial-data="modalInitialData"
-   :selected-date="modalSelectedDate"
-   @close="closeCompromissoModal"
-   @save="saveCompromisso"
-   @delete="deleteCompromisso"
- />
-
-
+    <CompromissoModal
+      :is-open="isModalOpen"
+      :mode="modalMode"
+      :initial-data="modalInitialData"
+      :selected-date="modalSelectedDate"
+      :amigos="amigos"
+      :is-creator="isCurrentUserTheCreator"
+      @close="closeCompromissoModal"
+      @save="saveCompromisso"
+      @delete="deleteCompromisso"
+    />
+  </div>
 </template>
+
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick } from 'vue';
+import { useRouter, RouterLink } from 'vue-router'; // Adicionado RouterLink
 import FullCalendar from '@fullcalendar/vue3';
 import type { CalendarApi, CalendarOptions, EventApi, EventInput, EventClickArg, EventDropArg } from '@fullcalendar/core';
-import type { DateClickArg, EventResizeDoneArg } from '@fullcalendar/interaction'; // DateClickArg e EventResizeDoneArg do interactionPlugin
+import type { DateClickArg, EventResizeDoneArg } from '@fullcalendar/interaction';
 
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import ptBrLocale from '@fullcalendar/core/locales/pt-br';
-import { useRouter } from 'vue-router';
+
 import apiClient from '../services/api';
 import { useAuthStore } from '../stores/authStore';
+import { useFriendStore } from '../stores/friendStore'; // Importar a store de amigos
 import CompromissoModal from '../components/CompromissoModal.vue';
 import type { CompromissoFormData } from '../components/CompromissoModal.vue';
-
+import type { UsuarioSummaryDTO } from '../types/amizade';
+// Interface para os dados como vêm da API do backend
 interface ApiCompromisso {
   id: number;
   titulo: string;
@@ -68,34 +68,42 @@ interface ApiCompromisso {
   dataHoraInicio: string;
   dataHoraFim: string;
   local?: string;
-  usuario?: { id: number; username: string };
+  participantes?: UsuarioSummaryDTO[];
+  criador?: UsuarioSummaryDTO;
 }
 
 const authStore = useAuthStore();
+const friendStore = useFriendStore(); // Instanciar a store de amigos
 const compromissos = ref<ApiCompromisso[]>([]);
 const loadingError = ref<string | null>(null);
 const fullCalendarRef = ref<InstanceType<typeof FullCalendar> | null>(null);
 const router = useRouter();
 
-const handleLogout = () => {
-    authStore.logout(); // Chama a ação de logout da store Pinia
-    router.push('/'); // Redireciona para a página de login após o logout
-  };
 // ---- Estado do Modal ----
 const isModalOpen = ref(false);
 const modalMode = ref<'create' | 'edit'>('create');
 const modalInitialData = ref<Partial<CompromissoFormData> | null>(null);
 const modalSelectedDate = ref<string | null>(null);
+const isCurrentUserTheCreator = ref(false); // NOVO: Para controlar a permissão de edição
+// Propriedade computada para a lista de amigos
+const amigos = computed(() => friendStore.getFriends);
+console.log(amigos);
+const handleLogout = () => {
+  authStore.logout();
+  router.push('/');
+};
 
 const calendarEvents = computed<EventInput[]>(() => {
   return compromissos.value.map(comp => ({
     id: String(comp.id),
     title: comp.titulo,
-    descricao: comp.descricao,
     start: comp.dataHoraInicio,
     end: comp.dataHoraFim,
     extendedProps: {
+      descricao: comp.descricao, // Armazena a descrição nos dados extras
       local: comp.local,
+      participantes: comp.participantes, // Salva participantes nos dados do evento
+      criador: comp.criador
     },
   }));
 });
@@ -103,26 +111,31 @@ const calendarEvents = computed<EventInput[]>(() => {
 // ---- Funções do Modal ----
 const openCompromissoModal = (
   mode: 'create' | 'edit',
-  data: DateClickArg | EventApi // Tipo mais específico para os dados de entrada
+  data: DateClickArg | EventApi
 ) => {
   modalMode.value = mode;
   if (mode === 'create') {
-    // Para o modo 'create', esperamos um DateClickArg
-    const clickInfo = data as DateClickArg; // Type assertion
+    isCurrentUserTheCreator.value = true; // Ao criar um evento, o utilizador logado é sempre o criador
+    const clickInfo = data as DateClickArg;
     modalSelectedDate.value = clickInfo.dateStr;
-    modalInitialData.value = null; // Limpa dados de edição
+    modalInitialData.value = null;
   } else if (mode === 'edit') {
-    // Para o modo 'edit', esperamos um EventApi
-    const event = data as EventApi; // Type assertion
+    const event = data as EventApi;
+    const currentUserId = authStore.user?.id;
+    const creatorId = event.extendedProps.criador?.id;
+    isCurrentUserTheCreator.value = creatorId === currentUserId; // Verifica se o utilizador é o criador
     modalInitialData.value = {
       id: event.id,
       titulo: event.title,
       descricao: event.extendedProps.descricao,
-      dataHoraInicio: event.startStr, // ou event.start?.toISOString()
-      dataHoraFim: event.endStr,     // ou event.end?.toISOString()
+      dataHoraInicio: event.startStr,
+      dataHoraFim: event.endStr,
       local: event.extendedProps.local,
+      amigoIds: event.extendedProps.participantes?.map((p: any) => p.id).filter((id: number) => id !== creatorId) || [],
+      participantes: event.extendedProps.participantes,
+      criador: event.extendedProps.criador
     };
-    modalSelectedDate.value = null; // Limpa data de criação
+    modalSelectedDate.value = null;
   }
   isModalOpen.value = true;
 };
@@ -134,17 +147,24 @@ const closeCompromissoModal = () => {
 };
 
 const saveCompromisso = async (data: CompromissoFormData) => {
+  // 'data' já vem do modal com o campo 'titulo' e 'amigoIds'
   try {
     if (modalMode.value === 'create') {
-      const { id, ...createData } = data;
-      await apiClient.post('/compromissos', createData);
-      alert('Compromisso criado com sucesso!');
+      // O objeto 'data' vindo do modal deve corresponder ao CompromissoCreateDTO do backend.
+      await apiClient.post('/compromissos', data);
+      alert('Compromisso criado e compartilhado com sucesso!');
     } else if (modalMode.value === 'edit' && data.id) {
+      if (!isCurrentUserTheCreator.value) {
+        alert('Apenas o criador pode editar o compromisso.');
+        return;
+      }
+      // A lógica de atualização precisaria de um DTO de atualização
+      // que também aceite uma lista de participantes.
       await apiClient.put(`/compromissos/${data.id}`, data);
       alert('Compromisso atualizado com sucesso!');
     }
     closeCompromissoModal();
-    fetchCompromissos();
+    fetchCompromissos(); // Recarrega os eventos no calendário
   } catch (error: any) {
     console.error('Erro ao salvar compromisso:', error);
     alert(`Falha ao salvar compromisso: ${error.response?.data?.message || error.message}`);
@@ -152,7 +172,13 @@ const saveCompromisso = async (data: CompromissoFormData) => {
 };
 
 const deleteCompromisso = async (compromissoId: number | string) => {
+   if (!isCurrentUserTheCreator.value) {
+    alert('Apenas o criador pode excluir o compromisso.');
+    return;
+  }
   try {
+    // A lógica de permissão de exclusão (ex: só o criador pode excluir)
+    // deve ser reforçada no backend.
     await apiClient.delete(`/compromissos/${compromissoId}`);
     alert('Compromisso excluído com sucesso!');
     closeCompromissoModal();
@@ -182,17 +208,14 @@ const calendarOptions = ref<CalendarOptions>({
   height: '90vh',
 
   dateClick: (clickInfo: DateClickArg) => {
-    console.log('Date clicked:', clickInfo.dateStr);
-    openCompromissoModal('create', clickInfo); // clickInfo é DateClickArg
+    openCompromissoModal('create', clickInfo);
   },
 
   eventClick: (clickInfo: EventClickArg) => {
-    console.log('Event clicked:', clickInfo.event.id, clickInfo.event.title);
-    openCompromissoModal('edit', clickInfo.event); // clickInfo.event é EventApi
+    openCompromissoModal('edit', clickInfo.event);
   },
 
   eventDrop: async (dropInfo: EventDropArg) => {
-    console.log('Event dropped:', dropInfo.event.id, dropInfo.event.startStr, dropInfo.event.endStr);
     if (!confirm(`Você tem certeza que quer mover "${dropInfo.event.title}" para ${dropInfo.event.startStr}?`)) {
       dropInfo.revert();
     } else {
@@ -203,12 +226,12 @@ const calendarOptions = ref<CalendarOptions>({
           dataHoraInicio: dropInfo.event.start?.toISOString(),
           dataHoraFim: dropInfo.event.end?.toISOString(),
           local: dropInfo.event.extendedProps.local,
+          amigoIds: dropInfo.event.extendedProps.participantes?.map((p: any) => p.id).filter((id: number) => id !== authStore.user?.id) || []
         };
         await apiClient.put(`/compromissos/${dropInfo.event.id}`, updatedCompromisso);
         alert('Compromisso atualizado (movido)!');
         fetchCompromissos();
       } catch (error: any) {
-        console.error('Erro ao mover compromisso:', error);
         alert(`Falha ao mover compromisso: ${error.response?.data?.message || error.message}`);
         dropInfo.revert();
       }
@@ -216,7 +239,6 @@ const calendarOptions = ref<CalendarOptions>({
   },
 
   eventResize: async (resizeInfo: EventResizeDoneArg) => {
-    console.log('Event resized:', resizeInfo.event.id, resizeInfo.event.startStr, resizeInfo.event.endStr);
     if (!confirm(`Você tem certeza que quer redimensionar "${resizeInfo.event.title}" para terminar em ${resizeInfo.event.endStr}?`)) {
       resizeInfo.revert();
     } else {
@@ -227,12 +249,12 @@ const calendarOptions = ref<CalendarOptions>({
           dataHoraInicio: resizeInfo.event.start?.toISOString(),
           dataHoraFim: resizeInfo.event.end?.toISOString(),
           local: resizeInfo.event.extendedProps.local,
+          amigoIds: resizeInfo.event.extendedProps.participantes?.map((p: any) => p.id).filter((id: number) => id !== authStore.user?.id) || []
         };
         await apiClient.put(`/compromissos/${resizeInfo.event.id}`, updatedCompromisso);
         alert('Compromisso atualizado (redimensionado)!');
         fetchCompromissos();
       } catch (error: any) {
-        console.error('Erro ao redimensionar compromisso:', error);
         alert(`Falha ao redimensionar compromisso: ${error.response?.data?.message || error.message}`);
         resizeInfo.revert();
       }
@@ -249,12 +271,11 @@ const fetchCompromissos = async () => {
     loadingError.value = null;
     const response = await apiClient.get<ApiCompromisso[]>('/compromissos');
     compromissos.value = response.data;
-    console.log("Compromissos carregados:", compromissos.value);
     await nextTick();
-    // const calendarApi = fullCalendarRef.value?.getApi();
-    // if (calendarApi) {
-      // A reatividade do 'events' com 'calendarEvents' (computed) deve ser suficiente.
-    // }
+    const calendarApi = fullCalendarRef.value?.getApi();
+    if (calendarApi) {
+      calendarApi.refetchEvents();
+    }
   } catch (error: any) {
     console.error("Erro ao buscar compromissos:", error);
     loadingError.value = "Falha ao carregar compromissos.";
@@ -269,11 +290,12 @@ onMounted(() => {
     authStore.initializeAuth();
   }
   fetchCompromissos();
+  friendStore.fetchFriends(); // <-- Busca a lista de amigos quando o componente monta
 });
-
 </script>
 
 <style scoped>
+/* A sua estilização existente é mantida */
 .body {
     display: flex;
     flex-direction: column;
@@ -282,8 +304,6 @@ onMounted(() => {
     width: 100%;
     margin: 0;
 }
-
-
 #rgcolumn {
     display: flex;
     flex-direction: row;
@@ -292,7 +312,6 @@ onMounted(() => {
     justify-content: space-around;
     background-color: #0D0C0C;
 }
-
 #logodiv {
   display: flex;
   flex-direction: row;
@@ -300,8 +319,6 @@ onMounted(() => {
   margin-top: 0;
   margin-left: 3%;
 }
-
-
 #log-conteiner{
   display: flex;
   flex-direction: row;
@@ -310,7 +327,6 @@ onMounted(() => {
   width: 100%;
   color: white;
 }
-
 #calendar {
     display: flex;
     align-items: center;
@@ -319,7 +335,6 @@ onMounted(() => {
     background-color: #1B1B1B;
     flex-grow: 1;
 }
-
  .logout-button{
     font-size: 1.2rem;
     padding: 0 1rem;
@@ -335,14 +350,12 @@ onMounted(() => {
     margin: 3rem;
     margin-inline: 2rem;
   }
-
   .logout-button:hover{
     transition: 0.5s;
     box-shadow: rgb(255, 198, 11) 0px 0px 5px 0px;
     cursor: pointer;
     transform: scale(1.03);
   }
-
 .calendar-container {
     width: 100%;
     padding: 10px;
@@ -350,86 +363,71 @@ onMounted(() => {
     box-sizing: border-box;
     overflow: hidden;
 }
-
 .oculto{
   display: none;
 }
-
 @media screen and (max-width: 750px){
     .body {
         display: flex;
         flex-direction: column;
-        /* Remover justify-content: space-between; se ainda estiver aqui */
-        min-height: 100vh; /* Manter min-height para permitir rolagem */
+        min-height: 100vh;
         width: 100%;
         align-items: center;
-        overflow-y: auto; /* Manter para controlar o scroll em telas menores */
+        overflow-y: auto;
         padding: 0;
         box-sizing: border-box;
     }
-
     #rgcolumn {
         flex-direction: column;
-        height: auto; /* Permite que a altura se ajuste ao conteúdo */
+        height: auto;
         width: 100%;
-        /* Ajustar margins/paddings para evitar espaçamento excessivo */
-        padding-bottom: 2rem; /* Adicionar um pequeno padding na parte inferior para espaçamento */
+        padding-bottom: 2rem;
     }
-
     #log-conteiner {
-        margin-top: 2rem; /* Reduzir a margem superior */
+        margin-top: 2rem;
         width: 100%;
-        height: auto; /* Ajustar a altura para ser flexível */
+        height: auto;
     }
-
     #logodiv {
         display: flex;
-        width: 90%; /* Ajustar para ocupar mais largura */
-        margin-top: 2rem; /* Reduzir a margem superior */
+        width: 90%;
+        margin-top: 2rem;
         margin-left: 0;
-        justify-content: center; /* Centralizar logo */
+        justify-content: center;
     }
-
-    /* Manter .logout-button display: none; se for a intenção */
     .logout-button {
         display: none;
     }
-
     #calendar {
         display: flex;
         align-items: center;
-        height: auto; /* Remover height fixo, deixar flex-grow lidar com a altura */
+        height: auto;
         width: 100%;
         background-color: #1B1B1B;
-        padding-top: 1rem; /* Adicionar um pequeno padding superior para espaçamento */
+        padding-top: 1rem;
     }
-
     .calendar-container {
         width: 100%;
-        height: 100%; /* Ocupa a altura total do seu pai (#calendar) */
+        height: 100%;
         padding: 10px;
         box-sizing: border-box;
     }
-
     .oculto {
         display: flex;
         flex-direction: column;
-        justify-content: center; /* Usar justify-content ao invés de justify-items */
-        height: auto; /* Deixar a altura flexível */
+        justify-content: center;
+        height: auto;
         width: 100%;
-        /* Adicionar padding ou margin para espaçamento */
         background-color: transparent;
     }
-
     #secrender {
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         width: 100%;
-        margin: 0; /* Reduzir margem superior */
+        margin: 0;
     }
-
     button {
         justify-content: center;
         font-size: 1.2rem;
@@ -443,59 +441,45 @@ onMounted(() => {
         height: 50px;
         transition: 0.5s;
         font-weight: 500;
-        margin: 1.5rem 0; /* Ajustar as margens para cima/baixo */
-
+        margin: 1.5rem 0;
     }
-
 }
-
 :deep(.fc-toolbar-title) {
   color: #e3e3e3 !important;
   text-transform: capitalize !important;
 }
-
 :deep(.fc-col-header-cell-cushion){
   color: #e3e3e3 !important;
   text-transform: capitalize !important;
 }
-
 :deep(.fc-daygrid-day-number){
   color: #e3e3e3 !important;
   padding: 15px !important;
 }
-
 :deep(.fc-event-time){
   color: #e3e3e3 !important;
 }
-
 :deep(.fc-event-title){
   color: #e3e3e3 !important;
 }
 :deep(.fc-timegrid-slot-label-frame){
   color: #e3e3e3 !important;
 }
-
 :deep(.fc-list-event){
   color: #e3e3e3 !important;
 }
-
 :deep(.fc-col-header-cell){
   border-bottom: none !important;
 }
-
 :deep(.fc-list-day-text){
   color: #e3e3e3 !important;
   text-transform: capitalize !important;
 }
-
 :deep(.fc-list-day-cushion){
   background: #121212 !important;
 }
-
 :deep(.fc-list-day-side-text){
   color: #e3e3e3 !important;
   text-transform: capitalize !important;
 }
-
-
 </style>
