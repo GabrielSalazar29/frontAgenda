@@ -60,6 +60,10 @@ import { useFriendStore } from '../stores/friendStore'; // Importar a store de a
 import CompromissoModal from '../components/CompromissoModal.vue';
 import type { CompromissoFormData } from '../components/CompromissoModal.vue';
 import type { UsuarioSummaryDTO } from '../types/amizade';
+import { useToast } from "vue-toastification";
+
+const toast = useToast();
+
 // Interface para os dados como vêm da API do backend
 interface ApiCompromisso {
   id: number;
@@ -152,40 +156,40 @@ const saveCompromisso = async (data: CompromissoFormData) => {
     if (modalMode.value === 'create') {
       // O objeto 'data' vindo do modal deve corresponder ao CompromissoCreateDTO do backend.
       await apiClient.post('/compromissos', data);
-      alert('Compromisso criado e compartilhado com sucesso!');
+      toast.success("Compromisso criado com sucesso!");
     } else if (modalMode.value === 'edit' && data.id) {
       if (!isCurrentUserTheCreator.value) {
-        alert('Apenas o criador pode editar o compromisso.');
+        toast.error('Apenas o criador pode editar o compromisso.');
         return;
       }
       // A lógica de atualização precisaria de um DTO de atualização
       // que também aceite uma lista de participantes.
       await apiClient.put(`/compromissos/${data.id}`, data);
-      alert('Compromisso atualizado com sucesso!');
+      toast.success('Compromisso atualizado com sucesso!');
     }
     closeCompromissoModal();
     fetchCompromissos(); // Recarrega os eventos no calendário
   } catch (error: any) {
     console.error('Erro ao salvar compromisso:', error);
-    alert(`Falha ao salvar compromisso: ${error.response?.data?.message || error.message}`);
+    toast.error(`Falha ao salvar compromisso: ${error.response?.data?.message || error.message}`);
   }
 };
 
 const deleteCompromisso = async (compromissoId: number | string) => {
    if (!isCurrentUserTheCreator.value) {
-    alert('Apenas o criador pode excluir o compromisso.');
+    toast.error('Apenas o criador pode excluir o compromisso.');
     return;
   }
   try {
     // A lógica de permissão de exclusão (ex: só o criador pode excluir)
     // deve ser reforçada no backend.
     await apiClient.delete(`/compromissos/${compromissoId}`);
-    alert('Compromisso excluído com sucesso!');
+    toast.success('Compromisso excluído com sucesso!');
     closeCompromissoModal();
     fetchCompromissos();
   } catch (error: any) {
     console.error('Erro ao excluir compromisso:', error);
-    alert(`Falha ao excluir compromisso: ${error.response?.data?.message || error.message}`);
+    toast.error(`Falha ao excluir compromisso: ${error.response?.data?.message || error.message}`);
   }
 };
 
@@ -229,10 +233,10 @@ const calendarOptions = ref<CalendarOptions>({
           amigoIds: dropInfo.event.extendedProps.participantes?.map((p: any) => p.id).filter((id: number) => id !== authStore.user?.id) || []
         };
         await apiClient.put(`/compromissos/${dropInfo.event.id}`, updatedCompromisso);
-        alert('Compromisso atualizado (movido)!');
+        toast.success('Compromisso atualizado (movido)!');
         fetchCompromissos();
       } catch (error: any) {
-        alert(`Falha ao mover compromisso: ${error.response?.data?.message || error.message}`);
+        toast.error(`Falha ao mover compromisso: ${error.response?.data?.message || error.message}`);
         dropInfo.revert();
       }
     }
@@ -252,10 +256,10 @@ const calendarOptions = ref<CalendarOptions>({
           amigoIds: resizeInfo.event.extendedProps.participantes?.map((p: any) => p.id).filter((id: number) => id !== authStore.user?.id) || []
         };
         await apiClient.put(`/compromissos/${resizeInfo.event.id}`, updatedCompromisso);
-        alert('Compromisso atualizado (redimensionado)!');
+        toast.success('Compromisso atualizado (redimensionado)!');
         fetchCompromissos();
       } catch (error: any) {
-        alert(`Falha ao redimensionar compromisso: ${error.response?.data?.message || error.message}`);
+        toast.error(`Falha ao redimensionar compromisso: ${error.response?.data?.message || error.message}`);
         resizeInfo.revert();
       }
     }
