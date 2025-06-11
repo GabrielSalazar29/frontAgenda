@@ -62,7 +62,9 @@ import { useFriendStore } from '../stores/friendStore';
 import type { UsuarioSummaryDTO } from '../types/amizade';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import { useToast } from "vue-toastification";
 
+const toast = useToast();
 const router = useRouter();
 const authStore = useAuthStore();
 const friendStore = useFriendStore();
@@ -100,12 +102,11 @@ const handleUnfriend = async (friendId: number) => {
     friendStore.actionError = null;
     try {
       await friendStore.unfriend(friendId);
-      alert('Amizade desfeita.');
+      toast.success('Amizade desfeita.');
       // A lista de amigos será atualizada automaticamente pela store após a ação de unfriend
     } catch (error: any) {
       // O erro já deve estar em friendStore.actionError, mas podemos adicionar um alerta se preferir
-      alert(`Erro ao desfazer amizade: ${friendStore.getActionError || 'Tente novamente.'}`);
-      console.error("Erro unfriend no componente:", error);
+      toast.error(`Erro ao desfazer amizade: ${friendStore.getActionError || 'Tente novamente.'}`);
     } finally {
       processingUnfriendId.value = null;
     }

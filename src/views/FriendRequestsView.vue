@@ -100,7 +100,9 @@ import { useFriendStore } from '../stores/friendStore';
 import type { SolicitacaoAmizadeDTO } from '../types/amizade';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import { useToast } from "vue-toastification";
 
+const toast = useToast();
 const authStore = useAuthStore();
 const friendStore = useFriendStore();
 const currentSection = vueRef<'incoming' | 'outgoing' | 'incoming_action' | null>(null); // Para diferenciar erros e loadings
@@ -141,10 +143,10 @@ const handleAccept = async (amizadeId: number) => {
   friendStore.actionError = null;
   try {
     await friendStore.acceptFriendRequest(amizadeId);
-    alert('Solicitação aceita!');
+    toast.success('Solicitação aceita!');
   } catch (error) {
     // O erro já está em friendStore.actionError
-    alert(`Erro ao aceitar solicitação: ${friendStore.getActionError || 'Tente novamente.'}`);
+    toast.error(`Erro ao aceitar solicitação: ${friendStore.getActionError || 'Tente novamente.'}`);
     console.error(error);
   } finally {
     processingRequestId.value = null;
@@ -166,9 +168,9 @@ const handleReject = async (amizadeId: number) => {
   friendStore.actionError = null;
   try {
     await friendStore.rejectFriendRequest(amizadeId);
-    alert('Solicitação rejeitada.');
+    toast.success('Solicitação rejeitada.');
   } catch (error) {
-    alert(`Erro ao rejeitar solicitação: ${friendStore.getActionError || 'Tente novamente.'}`);
+    toast.error(`Erro ao rejeitar solicitação: ${friendStore.getActionError || 'Tente novamente.'}`);
     console.error(error);
   } finally {
     processingRequestId.value = null;

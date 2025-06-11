@@ -76,6 +76,9 @@ import { useFriendStore } from '../stores/friendStore';
 import type { UsuarioSummaryDTO, SolicitacaoAmizadeDTO } from '../types/amizade';
 import { StatusAmizade } from '../types/amizade'; // Importar o enum
 import { useAuthStore } from '@/stores/authStore';
+import { useToast } from "vue-toastification";
+
+const toast = useToast();
 const authStore = useAuthStore();
 
 
@@ -148,11 +151,11 @@ const handleUserAction = async (user: UsuarioSummaryDTO) => {
   // Se nenhuma das condições acima, então é para enviar uma nova solicitação
   try {
     await friendStore.sendFriendRequest(user.id);
-    alert(`Solicitação de amizade enviada para ${user.username}!`);
+    toast.success(`Solicitação de amizade enviada para ${user.username}!`);
     // Atualiza a lista de solicitações enviadas para refletir a mudança no botão
     await friendStore.fetchOutgoingRequests();
   } catch (error: any) {
-    alert(`Erro ao enviar solicitação: ${error.message || 'Tente novamente.'}`);
+    toast.error(`Erro ao enviar solicitação: ${error.message || 'Tente novamente.'}`);
   }
 };
 
